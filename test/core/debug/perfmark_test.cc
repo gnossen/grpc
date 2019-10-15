@@ -36,11 +36,38 @@ TEST(PerfmarkTest, InstantiateCircularArray) {
 }
 
 TEST(Perfmark, InstantiateTag) {
-   auto tag = ::perfmark::create_tag(0, 1);
-   auto tag2 = ::perfmark::create_tag(0, 2);
+   auto tag = ::perfmark::create_tag(0, 1, true);
+   auto tag2 = ::perfmark::create_tag(0, 2, false);
    EXPECT_EQ(0, tag.id);
    EXPECT_EQ(0, tag2.id);
    EXPECT_GT(tag2.timestamp, tag.timestamp);
+   EXPECT_EQ(tag.thread_id, tag2.thread_id);
+}
+
+TEST(Perfmark, TestThread) {
+    // Never initialize the stuff in the main thread of the test process or
+    // else we'll be contaminated.
+    ::perfmark::Tag* out_buffer = new ::perfmark::Tag[::perfmark::internal::kDefaultCircularArraySize];
+    uint64_t corrupted_size = 0;
+    uint64_t read_count = 0;
+    auto test_thread = std::thread([out_buffer, &corrupted_size, &read_count]() {
+        ::perfmark::InitThread();
+        {
+            ::perfmark::Task task(42);
+            volatile int foo = 0;
+            for (size_t i = 0; i < 1000; ++i) {
+                foo++;
+            }
+        }
+        ::perfmark::g_tag_store->read(0, out_buffer, &corrupted_size, &read_count);
+        ::perfmark::ShutdownThread();
+    });
+    test_thread.join();
+    EXPECT_EQ(0, corrupted_size);
+    EXPECT_EQ(2, read_count);
+    std::cout << "Start: " << out_buffer[0].timestamp << std::endl;
+    std::cout << "End: " << out_buffer[1].timestamp << std::endl;
+    std::cout << "Duration: " << out_buffer[1].timestamp - out_buffer[0].timestamp << std::endl;
 }
 
 int main(int argc, char** argv) {

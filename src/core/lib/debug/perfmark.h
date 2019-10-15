@@ -21,7 +21,11 @@
 
 #include <atomic>
 #include <cstdint>
+#include <stdexcept>
+#include <thread>
 #include <grpc/support/port_platform.h>
+
+#include <iostream>
 
 namespace perfmark {
 
@@ -48,7 +52,7 @@ public:
         T* it = data_out;
         // In case we've missed whole laps around the array, trim.
         last_read = ((first_observed_write - 1) / size) * size + (last_read % size);
-        for (size_t i = last_read; i < first_observed_write; ++i) {
+        for (uint64_t i = last_read; i < first_observed_write; ++i) {
            *(it++) = data_[i % size];
         }
         uint64_t last_observed_write = write_marker_.load(std::memory_order_acquire);
@@ -72,18 +76,65 @@ private:
 
 typedef struct {
     uint64_t id;
+    uint64_t thread_id;
     uint64_t timestamp;
     uint64_t link_id;
-} Tag ;
+    bool start;
+} Tag;
 
-Tag create_tag(uint64_t id, uint64_t link_id = 0) {
+// TODO: These should be in the internal namespace.
+thread_local internal::CircularArray<Tag>* g_tag_store = nullptr;
+thread_local uint64_t g_thread_id = 0;
+static std::atomic<uint64_t> g_next_thread_id {0};
+
+Tag create_tag(uint64_t id, uint64_t link_id, bool start) {
     Tag tag;
     tag.id = id;
+    tag.thread_id = g_thread_id;
     // Using clang intrinsic for the moment.
     tag.timestamp = __rdtsc();
     tag.link_id = link_id;
+    tag.start = start;
     return tag;
 }
+
+
+void InitThread() {
+     if (g_tag_store != nullptr) {
+        // TODO: Do whatever OSS Googlers do when they can't throw. Which is... what exactly?
+        throw std::runtime_error("Ahhhhhh!");
+     }
+     g_tag_store = new internal::CircularArray<Tag>();
+     g_thread_id = g_next_thread_id.fetch_add(1, std::memory_order_acq_rel);
+}
+
+void ShutdownThread() {
+     if (g_tag_store == nullptr) {
+        // TODO: Do whatever OSS Googlers do when they can't throw. Which is... what exactly?
+        throw std::runtime_error("Ahhhhhh!");
+     }
+     delete g_tag_store;
+     // Do not decrement the next_thread ID so we can keep uniqueness of IDs.
+}
+
+
+class Task {
+public:
+    Task(uint64_t task_id) : id_(task_id) {
+        // We assume that InitThread() has already been called.
+        // TODO: Actually fill out the tag.
+        g_tag_store->insert(create_tag(id_, 0, true));
+        std::cout << "Inserting into tag store!" << std::endl;
+    }
+
+    ~Task() {
+        g_tag_store->insert(create_tag(id_, 0, false));
+        std::cout << "Inserting into tag store!" << std::endl;
+    }
+
+private:
+    uint64_t id_;
+};
 
 } // end namespace perfmark
 
