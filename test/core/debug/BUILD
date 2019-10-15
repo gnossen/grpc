@@ -32,3 +32,15 @@ grpc_cc_test(
     ],
     uses_polling = False,
 )
+
+grpc_cc_test(
+    name = "perfmark_test",
+    srcs = ["perfmark_test.cc"],
+    external_deps = ["gtest"],
+    language = "C++",
+    deps = [
+        "//:gpr",
+        "//:grpc",
+        "//test/core/util:grpc_test_util",
+    ],
+)
