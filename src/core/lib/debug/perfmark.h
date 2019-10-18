@@ -29,9 +29,9 @@
 
 namespace perfmark {
 
-namespace internal {
-
 static constexpr uint64_t kDefaultCircularArraySize = 1 << 16;
+
+namespace internal {
 
 // Single writer, single reader circular array.
 // Often written and rarely read.
@@ -68,36 +68,91 @@ public:
     }
 
 private:
-    T data_[kDefaultCircularArraySize];
+    T data_[size];
     std::atomic<uint64_t> write_marker_;
 };
 
 }  // end namespace internal
+
+typedef enum {
+  START_OP = 1,
+  END_OP = 2
+} TagType;
 
 typedef struct {
     uint64_t id;
     uint64_t thread_id;
     uint64_t timestamp;
     uint64_t link_id;
-    bool start;
+    TagType tag_type;
 } Tag;
 
 // TODO: These should be in the internal namespace.
 thread_local internal::CircularArray<Tag>* g_tag_store = nullptr;
 thread_local uint64_t g_thread_id = 0;
+static internal::CircularArray<Tag> ** g_threadlocal_tag_stores = nullptr;
 static std::atomic<uint64_t> g_next_thread_id {0};
 
-Tag create_tag(uint64_t id, uint64_t link_id, bool start) {
+Tag create_tag(uint64_t id, uint64_t link_id, TagType tag_type) {
     Tag tag;
     tag.id = id;
     tag.thread_id = g_thread_id;
     // Using clang intrinsic for the moment.
     tag.timestamp = __rdtsc();
     tag.link_id = link_id;
-    tag.start = start;
+    tag.tag_type = tag_type;
     return tag;
 }
 
+// Only the collection thread ever touches these, so no locking is needed.
+static Tag * g_global_tag_store;
+static Tag ** g_per_thread_buffers;
+
+
+// TODO: Move to internal namespace.
+void CollectionThread() {
+  // TODO: Clean this up.
+  uint64_t* last_reads = new uint64_t[std::thread::hardware_concurrency()];
+  for (uint64_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
+    last_reads[i] = 0;
+  }
+  uint64_t* corrupted_sizes = new uint64_t[std::thread::hardware_concurrency()];
+  for (uint64_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
+    corrupted_sizes[i] = 0;
+  }
+  uint64_t* read_counts = new uint64_t[std::thread::hardware_concurrency()];
+  for (uint64_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
+    read_counts[i] = 0;
+  }
+  for (;;) {
+    const uint64_t thread_count = g_next_thread_id.load(std::memory_order_acquire)
+    for (uint64_t i = 0; i < thread_count; ++i) {
+      // Copy into a non-racy buffer.
+      g_threadlocal_tag_stores[i]->read(&last_reads[i], g_per_thread_buffers[i], &corrupted_sizes[i], &read_counts[i]);
+    }
+    // Merge all buffers into a single, totally chronologically-ordered
+    // buffer.
+
+  }
+}
+
+
+void StartCollectionThread() {
+  // TODO: Consider the case where gRPC is brought completely down then back up
+  // in the same process.
+  if (g_global_tag_store != nullptr || g_per_thread_buffers != nullptr || g_threadlocal_tag_stores != nullptr) {
+    throw std::runtime_error("");
+  }
+  g_global_tag_store = new Tag[std::thread::hardware_concurrency() * kDefaultCircularArraySize];
+  g_per_thread_buffers = new Tag*[std::thread::hardware_concurrency()];
+  g_threadlocal_tag_stores = new internal::CircularArray<Tag>*[std::thread::hardware_concurrency()];
+  for (uint64_t i = 0; i < std::thread::hardware_concurrency(); ++i) {
+    g_per_thread_buffers[i] = new Tag[kDefaultCircularArraySize];
+  }
+  // TODO: Figure out deactivating the thread.
+  std::thread collection_thread(&StartCollectionThread);
+  collection_thread.detach();
+}
 
 void InitThread() {
      if (g_tag_store != nullptr) {
@@ -106,6 +161,9 @@ void InitThread() {
      }
      g_tag_store = new internal::CircularArray<Tag>();
      g_thread_id = g_next_thread_id.fetch_add(1, std::memory_order_acq_rel);
+     // Add a pointer to this thread's circular array somewhere the collection
+     // thread can get to it.
+     g_threadlocal_tag_stores[g_thread_id] = g_tag_store;
 }
 
 void ShutdownThread() {
@@ -123,13 +181,11 @@ public:
     Task(uint64_t task_id) : id_(task_id) {
         // We assume that InitThread() has already been called.
         // TODO: Actually fill out the tag.
-        g_tag_store->insert(create_tag(id_, 0, true));
-        std::cout << "Inserting into tag store!" << std::endl;
+        g_tag_store->insert(create_tag(id_, 0, START_OP));
     }
 
     ~Task() {
-        g_tag_store->insert(create_tag(id_, 0, false));
-        std::cout << "Inserting into tag store!" << std::endl;
+        g_tag_store->insert(create_tag(id_, 0, END_OP));
     }
 
 private:

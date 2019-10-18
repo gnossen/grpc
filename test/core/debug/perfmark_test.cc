@@ -21,7 +21,7 @@
 
 TEST(PerfmarkTest, InstantiateCircularArray) {
     static constexpr uint64_t test_range = 20;
-    uint64_t* out_buffer = new uint64_t[::perfmark::internal::kDefaultCircularArraySize];
+    uint64_t* out_buffer = new uint64_t[::perfmark::kDefaultCircularArraySize];
     uint64_t corrupted_size = 0;
     uint64_t read_count = 0;
     auto* circular_array = new ::perfmark::internal::CircularArray<uint64_t>;
@@ -36,8 +36,8 @@ TEST(PerfmarkTest, InstantiateCircularArray) {
 }
 
 TEST(Perfmark, InstantiateTag) {
-   auto tag = ::perfmark::create_tag(0, 1, true);
-   auto tag2 = ::perfmark::create_tag(0, 2, false);
+   auto tag = ::perfmark::create_tag(0, 1, ::perfmark::START_OP);
+   auto tag2 = ::perfmark::create_tag(0, 2, ::perfmark::END_OP);
    EXPECT_EQ(0, tag.id);
    EXPECT_EQ(0, tag2.id);
    EXPECT_GT(tag2.timestamp, tag.timestamp);
@@ -47,9 +47,10 @@ TEST(Perfmark, InstantiateTag) {
 TEST(Perfmark, TestThread) {
     // Never initialize the stuff in the main thread of the test process or
     // else we'll be contaminated.
-    ::perfmark::Tag* out_buffer = new ::perfmark::Tag[::perfmark::internal::kDefaultCircularArraySize];
+    ::perfmark::Tag* out_buffer = new ::perfmark::Tag[::perfmark::kDefaultCircularArraySize];
     uint64_t corrupted_size = 0;
     uint64_t read_count = 0;
+    ::perfmark::StartCollectionThread();
     auto test_thread = std::thread([out_buffer, &corrupted_size, &read_count]() {
         ::perfmark::InitThread();
         {
