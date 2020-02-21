@@ -281,6 +281,24 @@ class _LoggingInterceptor(grpc.ServerInterceptor,
         return continuation(client_call_details, request_iterator)
 
 
+class _DoneCallbackInterceptor(grpc.UnaryStreamClientInterceptor):
+
+    def __init__(self):
+        self._called = 0
+
+    def intercept_unary_stream(self, continuation, client_call_details,
+                               request):
+        def _on_done_callback(unused_call_future):
+            self._called += 1
+        response = continuation(client_call_details, request)
+        response.add_done_callback(_on_done_callback)
+        return response
+
+    def done_callback_times_invoked(self):
+        return self._called
+
+
+
 class _DefectiveClientInterceptor(grpc.UnaryUnaryClientInterceptor):
 
     def intercept_unary_unary(self, ignored_continuation,
@@ -705,6 +723,23 @@ class InterceptorTest(unittest.TestCase):
         with self.assertRaises(grpc.RpcError):
             exception.result()
         self.assertIsInstance(exception.exception(), grpc.RpcError)
+
+    def testInterceptedUnaryStreamDoneCallback(self):
+        request = b'\x37\x58'
+
+        self._record[:] = []
+
+        interceptors = (_DoneCallbackInterceptor(), _DoneCallbackInterceptor(),)
+        channel = grpc.intercept_channel(
+            self._channel, *interceptors)
+
+        multi_callable = _unary_stream_multi_callable(channel)
+        response_iterator = multi_callable(
+            request,
+            metadata=(('test', 'InterceptedUnaryRequestStreamResponse'),))
+        tuple(response_iterator)
+        self.assertEqual(1, interceptors[0].done_callback_times_invoked())
+        self.assertEqual(1, interceptors[1].done_callback_times_invoked())
 
 
 if __name__ == '__main__':
