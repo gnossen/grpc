@@ -117,11 +117,17 @@ class _LoadBalancerStatsServicer(test_pb2_grpc.LoadBalancerStatsServiceServicer
 
 
 def _start_rpc(request_id: int, stub: test_pb2_grpc.TestServiceStub,
-               timeout: float, futures: Mapping[int, grpc.Future]) -> None:
+               timeout: float, futures: Mapping[int, grpc.Future],
+               print_response: bool) -> None:
     logger.info(f"Sending request to backend: {request_id}")
     future = stub.UnaryCall.future(messages_pb2.SimpleRequest(),
                                    timeout=timeout)
     futures[request_id] = future
+    def _on_done(rpc_future: grpc.Future) -> None:
+        logger.debug(f"Finishing RPC {request_id}")
+        _on_rpc_done(request_id, future, print_response)
+        del futures[request_id]
+    future.add_done_callback(_on_done)
 
 
 def _on_rpc_done(rpc_id: int, future: grpc.Future,
@@ -147,18 +153,6 @@ def _on_rpc_done(rpc_id: int, future: grpc.Future,
             watcher.on_rpc_complete(rpc_id, hostname)
 
 
-def _remove_completed_rpcs(futures: Mapping[int, grpc.Future],
-                           print_response: bool) -> None:
-    logger.debug("Removing completed RPCs")
-    done = []
-    for future_id, future in futures.items():
-        if future.done():
-            _on_rpc_done(future_id, future, args.print_response)
-            done.append(future_id)
-    for rpc_id in done:
-        del futures[rpc_id]
-
-
 def _cancel_all_rpcs(futures: Mapping[int, grpc.Future]) -> None:
     logger.info("Cancelling all remaining RPCs")
     for future in futures.values():
@@ -178,8 +172,7 @@ def _run_single_channel(args: argparse.Namespace):
                 _global_rpc_id += 1
             start = time.time()
             end = start + duration_per_query
-            _start_rpc(request_id, stub, float(args.rpc_timeout_sec), futures)
-            _remove_completed_rpcs(futures, args.print_response)
+            _start_rpc(request_id, stub, float(args.rpc_timeout_sec), futures, args.print_response)
             logger.debug(f"Currently {len(futures)} in-flight RPCs")
             now = time.time()
             while now < end:
