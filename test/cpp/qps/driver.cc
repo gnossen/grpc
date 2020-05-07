@@ -358,12 +358,6 @@ std::unique_ptr<ScenarioResult> RunScenario(
   client_config.set_median_latency_collection_interval_millis(
       median_latency_collection_interval_millis);
 
-  constexpr server_warmup_seconds = 30;
-  gpr_log(GPR_INFO, "Waiting to allow server to warm up.");
-  gpr_sleep_until(
-      gpr_time_add(start, gpr_time_from_seconds(server_warmup_seconds, GPR_TIMESPAN)));
-
-
   // Targets are all set by now
   result_client_config = client_config;
   // Start clients
