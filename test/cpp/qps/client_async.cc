@@ -26,6 +26,7 @@
 #include <thread>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 #include <grpc/grpc.h>
 #include <grpc/support/cpu.h>
@@ -99,7 +100,9 @@ class ClientRpcContextUnaryImpl : public ClientRpcContext {
       case State::RESP_DONE:
         if (status_.ok()) {
           entry->set_value((UsageTimer::Now() - start_) * 1e9);
-        }
+        } else  {
+          std::cerr << "RPC failed with status code " << status_.error_message() << ": " << status_.error_details() << std::endl;
+        }`
         callback_(status_, &response_, entry);
         next_state_ = State::INVALID;
         return false;
