@@ -102,7 +102,7 @@ class ClientRpcContextUnaryImpl : public ClientRpcContext {
           entry->set_value((UsageTimer::Now() - start_) * 1e9);
         } else  {
           std::cerr << "RPC failed with status code " << status_.error_message() << ": " << status_.error_details() << std::endl;
-        }`
+        }
         callback_(status_, &response_, entry);
         next_state_ = State::INVALID;
         return false;
