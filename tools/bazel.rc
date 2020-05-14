@@ -7,6 +7,7 @@ build --define=use_fast_cpp_protos=true
 
 build:opt --compilation_mode=opt
 build:opt --copt=-Wframe-larger-than=16384
+build:opt --copt=-fno-omit-frame-pointer
 
 build:dbg --compilation_mode=dbg
 
