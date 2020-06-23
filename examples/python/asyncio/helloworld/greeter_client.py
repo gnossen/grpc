@@ -23,11 +23,8 @@ from helloworld_pb2_grpc import GreeterStub
 
 async def run_client():
     async with grpc_aio.insecure_channel('localhost:50051') as channel:
-        print("Creating stub")
         stub = GreeterStub(channel)
-        print("Awaiting response")
         response = await stub.SayHello(HelloRequest(name="you"))
-        print("Finished awaiting response.")
     print(f"Greeter client received: {response.message}")
 
 

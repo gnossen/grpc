@@ -28,19 +28,18 @@ class Greeter(GreeterServicer):
 
     # TODO: Type annotations.
     async def SayHello(self, request, context):
-        print("Received request")
         return HelloReply(message=f"Hello {request.name}")
 
 
 async def serve():
+    servicer = Greeter()
     server = grpc.experimental.aio.server()
-    add_GreeterServicer_to_server(Greeter(), server)
+    add_GreeterServicer_to_server(servicer, server)
     server.add_insecure_port('localhost:50051')
     await server.start()
-    print("Server started")
     await server.wait_for_termination()
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig()
     asyncio.run(serve())
