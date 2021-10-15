@@ -600,8 +600,7 @@ class TrafficDirectorAppNetManager(TrafficDirectorManager):
         bs_ref = f"projects/{self.project}/locations/global/backendServices/{self.backend_service.name}"
         body = {
             "routers": [self.router.url],
-            "hostnames":
-                host,
+            "hostnames": host,
             "rules": [{
                 "action": {
                     "destinations": [{

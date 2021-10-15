@@ -144,7 +144,10 @@ class GrpcRoute:
         @classmethod
         def from_response(cls, d: Dict[str, Any]) -> 'RouteAction':
             return cls(
-                destinations=[Destination.from_response(dest) for dest in d["destinations"]] if "destinations" in d else [],
+                destinations=[
+                    Destination.from_response(dest)
+                    for dest in d["destinations"]
+                ] if "destinations" in d else [],
                 drop=d.get("drop"),
             )
 
@@ -156,7 +159,8 @@ class GrpcRoute:
         @classmethod
         def from_response(cls, d: Dict[str, Any]) -> 'RouteRule':
             return cls(
-                matches=[RouteMatch.from_response(m) for m in d["matches"]] if "matches" in d else [],
+                matches=[RouteMatch.from_response(m) for m in d["matches"]]
+                if "matches" in d else [],
                 action=RouteAction.from_response(d["action"]),
             )
 
