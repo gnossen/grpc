@@ -1582,7 +1582,7 @@ if args.use_docker:
         dockerfile_dir = next(iter(dockerfile_dirs))
 
     child_argv = [arg for arg in sys.argv if not arg == '--use_docker']
-    run_tests_cmd = 'python tools/run_tests/run_tests.py %s' % ' '.join(
+    run_tests_cmd = 'python3 tools/run_tests/run_tests.py %s' % ' '.join(
         child_argv[1:])
 
     env = os.environ.copy()
