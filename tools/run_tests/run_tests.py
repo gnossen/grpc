@@ -488,6 +488,7 @@ class CLanguage(object):
     def __str__(self):
         return self.make_target
 
+
 class FakeLanguage(object):
 
     def __init__(self):
@@ -505,8 +506,7 @@ class FakeLanguage(object):
                 self.config.job_spec(
                     cmdline,
                     shortname="sleep {}".format(i),
-                )
-            )
+                ))
         return sorted(out)
 
     def make_targets(self):
