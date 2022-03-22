@@ -6,7 +6,7 @@
   
   The `grpc/grpc` repository's primary build system is Bazel. Rules are provided
   for C++, Python, and Objective-C. While C++ supports other build systems such as
-  CMake, these rules are actually generated from the Bazel defitions.
+  CMake, these rules are actually generated from the Bazel definitions.
   
   Projects built with Bazel may use the `grpc/grpc` repo not only to add a
   dependency on the library itself, but also to generate protobuf, stub, and
