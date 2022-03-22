@@ -18,9 +18,11 @@ set -ex
 cd "$(dirname "$0")"
 
 # TODO(jtattermusch): make build work with bazel 2.2.0 and bazel 1.2.1 if that's reasonably simple.
+# TODO(rbellevi): Create a single source of truth for this and the support
+# markdown doc.
 SUPPORTED_VERSIONS=(
   "3.7.2"
-  "4.0.0"
+  "4.2.2"
   "5.0.0"
 )
 
