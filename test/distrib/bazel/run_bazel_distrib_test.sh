@@ -21,7 +21,7 @@ cd "$(dirname "$0")"
 VERSIONS=$(grep -v '#' supported_versions.txt)
 
 FAILED_VERSIONS=""
-for VERSION in $VERSIONS; do
+for VERSION in "$VERSIONS"; do
     echo "Running bazel distribtest with bazel version ${VERSION}"
     ./test_single_bazel_version.sh "${VERSION}" || FAILED_VERSIONS="${FAILED_VERSIONS}${VERSION} "
 done
