@@ -139,9 +139,7 @@ class GrpcRoute:
             destinations = [
                 Destination.from_response(dest) for dest in d["destinations"]
             ] if "destinations" in d else []
-            return cls(
-                destinations=destinations,
-            )
+            return cls(destinations=destinations,)
 
     @dataclasses.dataclass(frozen=True)
     class RouteRule:
@@ -250,7 +248,8 @@ class NetworkServicesV1Alpha1(NetworkServicesV1Beta1):
         mesh = self._create_resource(collection=self._api_locations.meshes(),
                                      body=body,
                                      meshId=name)
-        logger.info("Created mesh: {} {} {}".format(mesh, type(mesh), dir(mesh)))
+        logger.info("Created mesh: {} {} {}".format(mesh, type(mesh),
+                                                    dir(mesh)))
         return mesh
 
     def get_mesh(self, name: str) -> Mesh:
