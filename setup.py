@@ -17,11 +17,11 @@
 # patch distutils
 import setuptools  # isort:skip
 
+import distutils
+from distutils.dir_util import copy_tree
 # Monkey Patch the unix compiler to accept ASM
 # files used by boring SSL.
 from distutils.unixccompiler import UnixCCompiler
-from distutils.dir_util import copy_tree
-import distutils
 
 UnixCCompiler.src_extensions.append('.S')
 del UnixCCompiler
@@ -49,7 +49,6 @@ DISTUTILS_DIR = os.path.join(distutils.__path__[0], "..")
 ARTIFACTS_DIR = os.environ['ARTIFACT_DIR']
 OUTPUT_DISTUTILS_DIR = os.path.join(ARTIFACTS_DIR, "distutils")
 copy_tree(DISTUTILS_DIR, OUTPUT_DISTUTILS_DIR)
-
 
 os.environ['ARCHFLAGS'] = '-arch {}'.format(platform.machine())
 
@@ -436,8 +435,10 @@ if "linux" in sys.platform or "darwin" in sys.platform:
 if 'darwin' in sys.platform:
     # os.environ['ARCHFLAGS'] = '-arch {}'.format(platform.machine())
     import distutils.sysconfig
-    sys.stderr.write("AAAAAAAAAAAAAAAAAAAA ARCHFLAGS: '{}'\n".format(os.environ['ARCHFLAGS']))
-    sys.stderr.write("distutils.sysconfig.get_config_vars: '{}'\n".format(distutils.sysconfig.get_config_vars()))
+    sys.stderr.write("AAAAAAAAAAAAAAAAAAAA ARCHFLAGS: '{}'\n".format(
+        os.environ['ARCHFLAGS']))
+    sys.stderr.write("distutils.sysconfig.get_config_vars: '{}'\n".format(
+        distutils.sysconfig.get_config_vars()))
     sys.stderr.flush()
     mac_target = sysconfig.get_config_var('MACOSX_DEPLOYMENT_TARGET')
     if mac_target:
