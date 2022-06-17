@@ -36,9 +36,9 @@ _NUM_RPCS = 150
 
 _TEST_METADATA_KEY = 'xds_md'
 _TEST_METADATA_VALUE_UNARY = 'test-key'
-_TEST_METADATA = (
-        (RpcTypeEmptyCall, _TEST_METADATA_KEY, _TEST_METADATA_VALUE_UNARY),
-)
+_TEST_METADATA = ((RpcTypeEmptyCall, _TEST_METADATA_KEY,
+                   _TEST_METADATA_VALUE_UNARY),)
+
 
 class TestFullPathMatchEmptyCall(xds_url_map_testcase.XdsUrlMapTestCase):
 
@@ -70,7 +70,9 @@ class TestFullPathMatchEmptyCall(xds_url_map_testcase.XdsUrlMapTestCase):
             _NUM_RPCS,
             rpc_distribution.empty_call_alternative_service_rpc_count)
 
-class TestFullPathMatchAndHeaderEmptyCall(xds_url_map_testcase.XdsUrlMapTestCase):
+
+class TestFullPathMatchAndHeaderEmptyCall(xds_url_map_testcase.XdsUrlMapTestCase
+                                         ):
 
     @staticmethod
     def url_map_change(
@@ -80,13 +82,12 @@ class TestFullPathMatchAndHeaderEmptyCall(xds_url_map_testcase.XdsUrlMapTestCase
             'priority': 0,
             # FullPath EmptyCall -> alternate_backend_service.
             'matchRules': [{
-                'fullPathMatch': '/grpc.testing.TestService/EmptyCall',
-                'headerMatches': [
-                    {
-                        'headerName': _TEST_METADATA_KEY,
-                        'exactMatch': _TEST_METADATA_VALUE_UNARY,
-                    }
-                ],
+                'fullPathMatch':
+                    '/grpc.testing.TestService/EmptyCall',
+                'headerMatches': [{
+                    'headerName': _TEST_METADATA_KEY,
+                    'exactMatch': _TEST_METADATA_VALUE_UNARY,
+                }],
             }],
             'service': GcpResourceManager().alternative_backend_service()
         }]
