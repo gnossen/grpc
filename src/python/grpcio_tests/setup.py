@@ -16,9 +16,9 @@
 import multiprocessing
 import os
 import os.path
+import subprocess
 import sys
 
-import subprocess
 import grpc_tools.command
 import setuptools
 
@@ -47,10 +47,10 @@ INSTALL_REQUIRES = (
     'google-auth>=1.17.2', 'requests>=2.14.2')
 
 print("AAAAAAAAAAAA Running pip freeze.")
-print(subprocess.check_output("{} -m pip freeze".format(sys.executable),
-                        shell=True,
-                              stderr=subprocess.STDOUT).decode('ascii'))
-
+print(
+    subprocess.check_output("{} -m pip freeze".format(sys.executable),
+                            shell=True,
+                            stderr=subprocess.STDOUT).decode('ascii'))
 
 if not PY3:
     INSTALL_REQUIRES += ('futures>=2.2.0', 'enum34>=1.0.4')
