@@ -773,9 +773,7 @@ class PythonLanguage(object):
                 # for arm64 testing)
                 return (python39_config,)
             else:
-                return (
-                    python38_config,
-                )
+                return (python38_config,)
         elif args.compiler == 'python3.6':
             return (python36_config,)
         elif args.compiler == 'python3.7':
