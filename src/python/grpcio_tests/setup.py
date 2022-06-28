@@ -16,9 +16,9 @@
 import multiprocessing
 import os
 import os.path
+import subprocess
 import sys
 
-import subprocess
 import grpc_tools.command
 import setuptools
 
@@ -48,17 +48,19 @@ INSTALL_REQUIRES = (
 
 print("AAAAAAAAAAAA Showing egg directory.")
 try:
-    print(subprocess.check_output("ls /var/local/git/grpc/src/python/grpcio_tests/.eggs",
-                            shell=True,
-                                  stderr=subprocess.STDOUT).decode('ascii'))
+    print(
+        subprocess.check_output(
+            "ls /var/local/git/grpc/src/python/grpcio_tests/.eggs",
+            shell=True,
+            stderr=subprocess.STDOUT).decode('ascii'))
 except Exception as e:
     print(e)
 
 print("AAAAAAAAAAAA Running pip freeze.")
-print(subprocess.check_output("{} -m pip freeze".format(sys.executable),
-                        shell=True,
-                              stderr=subprocess.STDOUT).decode('ascii'))
-
+print(
+    subprocess.check_output("{} -m pip freeze".format(sys.executable),
+                            shell=True,
+                            stderr=subprocess.STDOUT).decode('ascii'))
 
 if not PY3:
     INSTALL_REQUIRES += ('futures>=2.2.0', 'enum34>=1.0.4')
