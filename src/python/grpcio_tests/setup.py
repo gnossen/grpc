@@ -15,7 +15,8 @@
 
 import google.protobuf
 
-print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA {}".format(google.protobuf.__version__))
+print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA {}".format(
+    google.protobuf.__version__))
 
 import multiprocessing
 import os
@@ -46,8 +47,7 @@ INSTALL_REQUIRES = (
     'grpcio-status>={version}'.format(version=grpc_version.VERSION),
     'grpcio-tools>={version}'.format(version=grpc_version.VERSION),
     'grpcio-health-checking>={version}'.format(version=grpc_version.VERSION),
-    'protobuf>=3.20.0,<4.0.9', 'six>=1.10',
-    'requests>=2.14.2')
+    'protobuf>=3.20.0,<4.0.9', 'six>=1.10', 'requests>=2.14.2')
 
 if not PY3:
     INSTALL_REQUIRES += ('futures>=2.2.0', 'enum34>=1.0.4')
