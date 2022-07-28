@@ -17,12 +17,13 @@ from __future__ import absolute_import
 import importlib
 import pkgutil
 import re
-import unittest
 import sys
+import unittest
 
 import coverage
 
 TEST_MODULE_REGEX = r'^.*_test$'
+
 
 # TODO: Docstrings
 def _relativize_to_sys_path(path):
@@ -37,6 +38,7 @@ def _relativize_to_sys_path(path):
                 relative += "/"
             return relative
     raise AssertionError("Failed to relativize {} to sys.path.".format(path))
+
 
 def _relative_path_to_module_prefix(path):
     return path.replace("/", ".")
@@ -92,9 +94,9 @@ class Loader(object):
 
     def _walk_package(self, package_path):
         prefix = _relative_path_to_module_prefix(
-              _relativize_to_sys_path(package_path))
-        for importer, module_name, is_package in (
-                pkgutil.walk_packages([package_path], prefix)):
+            _relativize_to_sys_path(package_path))
+        for importer, module_name, is_package in (pkgutil.walk_packages(
+            [package_path], prefix)):
             found_module = importer.find_module(module_name)
             module = None
             if module_name in sys.modules:
@@ -102,7 +104,6 @@ class Loader(object):
             else:
                 module = found_module.load_module(module_name)
             self.visit_module(module)
-
 
     def visit_module(self, module):
         """Visits the module, adding discovered tests to the test suite.
