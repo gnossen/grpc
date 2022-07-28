@@ -17,8 +17,8 @@ from __future__ import absolute_import
 import importlib
 import pkgutil
 import re
-import unittest
 import sys
+import unittest
 
 import coverage
 
@@ -70,8 +70,8 @@ class Loader(object):
       package_paths (list): A list of paths over which to walk through modules
         along.
     """
-        for importer, module_name, is_package in (
-                pkgutil.walk_packages(package_paths, "tests.")):
+        for importer, module_name, is_package in (pkgutil.walk_packages(
+                package_paths, "tests.")):
             found_module = importer.find_module(module_name)
             module = None
             if module_name in sys.modules:
