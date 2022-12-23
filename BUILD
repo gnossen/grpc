@@ -469,6 +469,11 @@ GRPCXX_PUBLIC_HDRS = [
     "include/grpcpp/impl/codegen/sync.h",
 ]
 
+sh_test(
+	name = "ptrace_test",
+	srcs = ["ptrace.sh"]
+)
+
 grpc_cc_library(
     name = "grpc_unsecure",
     srcs = [

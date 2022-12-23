@@ -40,6 +40,9 @@ rbe_autoconfig(
     ),
     # use exec_properties instead of deprecated remote_execution_properties
     use_legacy_platform_definition = False,
+    registry = "gcr.io",
+    repository = "grpc-testing/rbellevi-bazel-rbe-gdb",
+    digest = "sha256:06a16a6fd71b4ba73fc4efecdff35c3fe4ab1748b353475bbb1e8084a9a40bf4",
 )
 
 load("@bazel_toolchains//rules:environments.bzl", "clang_env")

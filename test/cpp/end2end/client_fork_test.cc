@@ -21,10 +21,12 @@ int main(int /* argc */, char** /* argv */) { return 0; }
 
 #include <pthread.h>
 #include <signal.h>
+#include <stdlib.h>
 
 #include <gtest/gtest.h>
 
 #include "absl/strings/str_cat.h"
+#include "absl/time/clock.h"
 
 #include <grpc/fork.h>
 #include <grpc/grpc.h>
@@ -36,7 +38,6 @@ int main(int /* argc */, char** /* argv */) { return 0; }
 #include <grpcpp/server.h>
 #include <grpcpp/server_builder.h>
 #include <grpcpp/server_context.h>
-
 #include "src/core/lib/gprpp/fork.h"
 #include "src/proto/grpc/testing/echo.grpc.pb.h"
 #include "test/core/util/port.h"
@@ -69,6 +70,24 @@ class ServiceImpl final : public EchoTestService::Service {
 std::unique_ptr<EchoTestService::Stub> MakeStub(const std::string& addr) {
   return EchoTestService::NewStub(
       grpc::CreateChannel(addr, InsecureChannelCredentials()));
+}
+
+
+void run_gdb(pid_t pid) {
+  // TODO: Use something better than the systemc ommand.
+  char gdb_cmd[1024];
+  sprintf(gdb_cmd, "sudo gdb -ex 'set confirm off' -ex 'echo attaching' -ex 'attach %ld' -ex 'echo print_backtrace' -ex 'thread apply all bt' -ex 'echo printed_backtrace' -ex 'quit'", (long)pid);
+  gpr_log(GPR_INFO, "Running `%s`", gdb_cmd);
+  system(gdb_cmd);
+  gpr_log(GPR_INFO, "gdb exited");
+}
+
+// Returns false on timeout.
+bool wait_pid_timeout(pid_t pid, const absl::Duration timeout) {
+  absl::SleepFor(timeout);
+  int status;
+  int result = waitpid(pid, &status, WNOHANG);
+  return result >= pid;
 }
 
 TEST(ClientForkTest, ClientCallsBeforeAndAfterForkSucceed) {
@@ -117,14 +136,17 @@ TEST(ClientForkTest, ClientCallsBeforeAndAfterForkSucceed) {
       FAIL() << "fork failed";
     case 0:  // post-fork child
     {
-      gpr_log(GPR_DEBUG, "In post-fork child");
+      gpr_log(GPR_DEBUG, "DO NOT SUBMIT:In post-fork child");
       EchoRequest request;
       EchoResponse response;
       ClientContext context;
       context.set_wait_for_ready(true);
 
+      gpr_log(GPR_DEBUG, "DO NOT SUBMIT: child Creating stub");
       std::unique_ptr<EchoTestService::Stub> stub = MakeStub(addr);
+      gpr_log(GPR_DEBUG, "DO NOT SUBMIT: child Created stub");
       auto stream = stub->BidiStream(&context);
+      gpr_log(GPR_DEBUG, "DO NOT SUBMIT: child Created stub");
 
       request.set_message("Hello again from child");
       gpr_log(GPR_DEBUG, "DO NOT SUBMIT: doing write from child");
@@ -157,12 +179,15 @@ TEST(ClientForkTest, ClientCallsBeforeAndAfterForkSucceed) {
 
       gpr_log(GPR_DEBUG, "DO NOT SUBMIT: waiting on child to shut down");
       // Wait for the post-fork child to exit; ensure it exited cleanly.
-      int child_status;
-      ASSERT_EQ(waitpid(child_client_pid, &child_status, 0), child_client_pid)
-          << "failed to get status of child client";
-      ASSERT_EQ(WEXITSTATUS(child_status), 0) << "child did not exit cleanly";
+
+      if (!wait_pid_timeout(child_client_pid, absl::Seconds(10))) {
+        run_gdb(child_client_pid);
+        ASSERT_FALSE(true) << "Child process timed out.";
+      }
     }
   }
+
+
 
   kill(server_pid, SIGINT);
 }
