@@ -32,8 +32,7 @@ RUN apt-get update && apt-get -y install \
   libtool \
   make \
   vim \
-  wget \
-  gdb
+  wget
 
 #========================
 # Bazel installation
