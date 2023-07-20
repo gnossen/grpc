@@ -30,8 +30,8 @@ EXCLUDE_PROTO_PACKAGES_LIST = [
 # Compute the pathes
 WORK_DIR = os.path.dirname(os.path.abspath(__file__))
 GRPC_ROOT = os.path.abspath(os.path.join(WORK_DIR, '..', '..', '..', '..'))
-XDS_PROTO_ROOT = os.path.join(GRPC_ROOT, 'third_party', 'envoy-api')
-UDPA_PROTO_ROOT = os.path.join(GRPC_ROOT, 'third_party', 'udpa')
+ENVOY_API_PROTO_ROOT = os.path.join(GRPC_ROOT, 'third_party', 'envoy-api')
+XDS_PROTO_ROOT = os.path.join(GRPC_ROOT, 'third_party', 'xds')
 GOOGLEAPIS_ROOT = os.path.join(GRPC_ROOT, 'third_party', 'googleapis')
 VALIDATE_ROOT = os.path.join(GRPC_ROOT, 'third_party', 'protoc-gen-validate')
 OPENCENSUS_PROTO_ROOT = os.path.join(GRPC_ROOT, 'third_party',
@@ -64,8 +64,8 @@ def add_test_import(proto_package_path: str,
 # Prepare Protoc command
 COMPILE_PROTO_ONLY = [
     'grpc_tools.protoc',
+    '--proto_path={}'.format(ENVOY_API_PROTO_ROOT),
     '--proto_path={}'.format(XDS_PROTO_ROOT),
-    '--proto_path={}'.format(UDPA_PROTO_ROOT),
     '--proto_path={}'.format(GOOGLEAPIS_ROOT),
     '--proto_path={}'.format(VALIDATE_ROOT),
     '--proto_path={}'.format(WELL_KNOWN_PROTOS_INCLUDE),
@@ -114,8 +114,8 @@ def create_init_file(path: str, package_path: str = "") -> None:
 
 def main():
     # Compile xDS protos
+    compile_protos(ENVOY_API_PROTO_ROOT)
     compile_protos(XDS_PROTO_ROOT)
-    compile_protos(UDPA_PROTO_ROOT)
     # We don't want to compile the entire GCP surface API, just the essential ones
     compile_protos(GOOGLEAPIS_ROOT, os.path.join('google', 'api'))
     compile_protos(GOOGLEAPIS_ROOT, os.path.join('google', 'rpc'))

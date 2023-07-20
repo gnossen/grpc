@@ -15,6 +15,7 @@
 """A PyPI package for xDS protos generated Python code."""
 
 import os
+import grpc_version
 
 import setuptools
 
@@ -35,10 +36,14 @@ INSTALL_REQUIRES = [
     'grpcio>=1.49.0',
     'protobuf>=4.21.6,<5.0dev',
 ]
-SETUP_REQUIRES = INSTALL_REQUIRES + ['grpcio-tools']
+
+# TODO Add a version range on grpcio-tools.
+SETUP_REQUIRES = INSTALL_REQUIRES + ['grpcio-tools>=1.49.0']
+
+# TODO: Version the same way as the rest of the ancillary packages.
 setuptools.setup(
     name='xds-protos',
-    version='0.0.12',
+    version=grpc_version.VERSION,
     packages=PACKAGES,
     description='Generated Python code from envoyproxy/data-plane-api',
     long_description_content_type='text/x-rst',
