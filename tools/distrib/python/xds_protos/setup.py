@@ -15,9 +15,10 @@
 """A PyPI package for xDS protos generated Python code."""
 
 import os
-import grpc_version
 
 import setuptools
+
+import grpc_version
 
 WORK_DIR = os.path.dirname(os.path.abspath(__file__))
 EXCLUDE_PYTHON_FILES = ['generated_file_import_test.py', 'build.py']

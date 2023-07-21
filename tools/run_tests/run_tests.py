@@ -213,9 +213,7 @@ def _pypy_config_generator(name, major, config_vars):
         config_vars.builder_prefix_arguments +
         [_pypy_pattern_function(major=major)] + [name] +
         config_vars.venv_relative_python + config_vars.toolchain,
-        config_vars.shell + config_vars.runner +
-        [python_path],
-        python_path)
+        config_vars.shell + config_vars.runner + [python_path], python_path)
 
 
 def _python_pattern_function(major, minor, bits):
@@ -607,7 +605,8 @@ class Php7Language(object):
 
 
 class PythonConfig(
-        collections.namedtuple('PythonConfig', ['name', 'build', 'run', 'python_path'])):
+        collections.namedtuple('PythonConfig',
+                               ['name', 'build', 'run', 'python_path'])):
     """Tuple of commands (named s.t. 'what it says on the tin' applies)"""
 
 
@@ -642,13 +641,14 @@ class PythonLanguage(object):
             # Run non-io-manager-specific tests.
             if os.name != "nt":
                 jobs.append(
-                    self.config.job_spec(
-                        [python_config.python_path, "tools/distrib/python/xds_protos/generated_file_import_test.py"],
-                        timeout_seconds = 60,
-                        environ=_FORCE_ENVIRON_FOR_WRAPPERS,
-                        shortname="{}.xds_protos".format(python_config.name)
-                    )
-                )
+                    self.config.job_spec([
+                        python_config.python_path,
+                        "tools/distrib/python/xds_protos/generated_file_import_test.py"
+                    ],
+                                         timeout_seconds=60,
+                                         environ=_FORCE_ENVIRON_FOR_WRAPPERS,
+                                         shortname="{}.xds_protos".format(
+                                             python_config.name)))
 
             # Run main test suite across all support IO managers.
             for io_platform in self._TEST_SPECS_FILE:
@@ -665,7 +665,8 @@ class PythonLanguage(object):
                     environment['GRPC_ENABLE_FORK_SUPPORT'] = '0'
                     jobs.extend([
                         self.config.job_spec(
-                            python_config.run + [self._TEST_COMMAND[io_platform]],
+                            python_config.run +
+                            [self._TEST_COMMAND[io_platform]],
                             timeout_seconds=8 * 60,
                             environ=dict(
                                 GRPC_PYTHON_TESTRUNNER_FILTER=str(test_case),
