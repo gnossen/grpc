@@ -325,7 +325,6 @@ class XdsKubernetesBaseTestCase(base_testcase.BaseTestCase):
                         cookies[peer] = metadata.value
         return cookies
 
-
     def assertSuccessfulRpcs(
         self, test_client: XdsTestClient, num_rpcs: int = 100
     ) -> dict[str]:
@@ -822,8 +821,7 @@ class RegularXdsKubernetesTestCase(IsolatedXdsKubernetesTestCase):
         return test_servers
 
     def startTestClient(
-        self, test_server: XdsTestServer,
-	server_target=None, **kwargs
+        self, test_server: XdsTestServer, server_target=None, **kwargs
     ) -> XdsTestClient:
         server_target = server_target or test_server.xds_uri
         test_client = self.client_runner.run(
