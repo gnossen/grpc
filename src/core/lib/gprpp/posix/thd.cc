@@ -22,13 +22,14 @@
 
 #include <string>
 
+#include <string>
+
 #include <grpc/support/time.h>
 
 #ifdef GPR_POSIX_SYNC
 
 #include <pthread.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
 #include <grpc/support/log.h>
